@@ -1,0 +1,17 @@
+package fortytwolabs;
+
+import java.util.Scanner;
+
+public class MainClass {
+	public static void main(String[] args) {
+		Scanner sc = new Scanner(System.in);
+		int choice = 0;
+		
+		while(choice != 0) {
+			System.out.println("Library Management System");
+			System.out.println("1. Add Book ");
+			System.out.println("2. Issue Book ");
+			System.out.println("3. Submit Book ");
+		}
+	}
+}
