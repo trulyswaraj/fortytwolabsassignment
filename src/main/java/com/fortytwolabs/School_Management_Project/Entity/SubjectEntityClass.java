@@ -18,7 +18,7 @@ public class SubjectEntityClass {
     @Column(name = "subject_name")
     private String name;
 
-    @ManyToMany(mappedBy = "subjects")
+    @ManyToMany(fetch = FetchType.EAGER, mappedBy = "subjects")
     @JsonIgnore
     private Set<TeacherEntityClass> teachers = new HashSet<>();
 

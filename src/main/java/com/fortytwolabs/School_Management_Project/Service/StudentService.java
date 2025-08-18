@@ -4,7 +4,6 @@ import com.fortytwolabs.School_Management_Project.Entity.StudentEntityClass;
 import com.fortytwolabs.School_Management_Project.Entity.SubjectEntityClass;
 import com.fortytwolabs.School_Management_Project.Repository.StudentRepository;
 import com.fortytwolabs.School_Management_Project.Repository.SubjectRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

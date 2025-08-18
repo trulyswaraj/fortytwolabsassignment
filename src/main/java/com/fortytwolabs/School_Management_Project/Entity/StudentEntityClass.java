@@ -26,7 +26,7 @@ public class StudentEntityClass {
     //instead it will load the subjects when getSubjects method is called. and if a new student is added,
     //we need to add the student and subject separately if persist is not used and if it is used we dont need to manually map the subject and students.
     //and if we use merge then what ever changes are done in the subject for a student the changes or updates are done automatically.
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name="student_subject",
             joinColumns = @JoinColumn(name="student_id"),
@@ -36,7 +36,7 @@ public class StudentEntityClass {
 
 
     //MANY-TO-MANY mapping for Multiple Students can have Multiple Teachers and vice versa.
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore
     @JoinTable(
             name="students_teachers",

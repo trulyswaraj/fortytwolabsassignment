@@ -1,41 +1,48 @@
-package com.fortytwolabs.School_Management_Project.Controller;
+package com.fortytwolabs.School_Management_Project.Resources;
 
 import com.fortytwolabs.School_Management_Project.Entity.TeacherEntityClass;
 import com.fortytwolabs.School_Management_Project.Service.TeacherService;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
 
-@RestController
-@RequestMapping("/api/teachers")
-public class TeacherController {
+@Component
+@Path("/api/teachers")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+public class TeacherResource {
 
     private final TeacherService teacherService;
 
 
-    public TeacherController(TeacherService teacherService) {
+    public TeacherResource(TeacherService teacherService) {
         this.teacherService = teacherService;
     }
 
-    @GetMapping
+    @GET
     public List<TeacherEntityClass> getAllTeacher(){
         return teacherService.getAllTeachers();
     }
 
-    @GetMapping("/email")
-    public List<TeacherEntityClass> getTeachersByEmail(@RequestParam String email){
+    @GET
+    @Path("/email")
+    public List<TeacherEntityClass> getTeachersByEmail(@QueryParam("email") String email){
         return teacherService.findByTeacherEmail(email);
     }
 
-    @GetMapping("/name")
-    public List<TeacherEntityClass> getTeachersByName(@RequestParam String name){
+    @GET
+    @Path("/name")
+    public List<TeacherEntityClass> getTeachersByName(@QueryParam("name") String name){
         return teacherService.findByTeacherName(name);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<TeacherEntityClass> getTeacherById(@PathVariable Integer id){
+    @GET
+    @Path("/{id}")
+    public ResponseEntity<TeacherEntityClass> getTeacherById(@PathParam("id") Integer id){
         Optional<TeacherEntityClass> teacherEntityClass = teacherService.findTeacherById(id);
 
         if(teacherEntityClass.isPresent()){
@@ -46,31 +53,35 @@ public class TeacherController {
     }
 
 
-    @PostMapping
-    public TeacherEntityClass createTeacher(@RequestBody TeacherEntityClass teacherEntityClass){
+    @POST
+    public TeacherEntityClass createTeacher( TeacherEntityClass teacherEntityClass){
         return teacherService.save(teacherEntityClass);
     }
 
-    @PutMapping("/{id}")
-    public TeacherEntityClass updateTeacher(@PathVariable Integer id, @RequestBody TeacherEntityClass teacherEntityClass){
+    @PUT
+    @Path("/{id}")
+    public TeacherEntityClass updateTeacher(@PathParam("id") Integer id, TeacherEntityClass teacherEntityClass){
         TeacherEntityClass updatedTeacher = teacherService.updateTeacher(id, teacherEntityClass);
         return ResponseEntity.ok(updatedTeacher).getBody();
     }
 
-    @PostMapping("/{teacherId}/subjects")
-    public ResponseEntity<TeacherEntityClass> assignSubjectToTeacher(@PathVariable Long teacherId, @RequestParam Long subjectId){
+    @POST
+    @Path("/{teacherId}/subjects")
+    public ResponseEntity<TeacherEntityClass> assignSubjectToTeacher(@PathParam("teacherId") Long teacherId, @QueryParam("subjectId") Long subjectId){
         TeacherEntityClass updatedTeacher = teacherService.assignTeacherToSubject(teacherId, subjectId);
         return ResponseEntity.ok(updatedTeacher);
     }
 
-    @PostMapping("/{teacherId}/students")
-    public ResponseEntity<TeacherEntityClass> assignTeacherToSubject(@PathVariable Long teacherId, @RequestParam Long studentId){
+    @POST
+    @Path("/{teacherId}/students")
+    public ResponseEntity<TeacherEntityClass> assignTeacherToStudent(@PathParam("teacherId") Long teacherId, @QueryParam("studentId") Long studentId){
         TeacherEntityClass teacherEntityClass = teacherService.assignTeacherToStudent(teacherId, studentId);
         return ResponseEntity.ok(teacherEntityClass);
     }
 
-    @PostMapping("/{teacherId}/subject")
-    public ResponseEntity<TeacherEntityClass> updateTeacherSubject(@PathVariable Long teacherId, @RequestParam Long subjectId){
+    @POST
+    @Path("/{teacherId}/subject")
+    public ResponseEntity<TeacherEntityClass> updateTeacherSubject(@PathParam("teacherId") Long teacherId, @QueryParam("subjectId") Long subjectId){
         TeacherEntityClass teacherEntityClass = teacherService.updateTeacherSubjects(teacherId, subjectId);
         return ResponseEntity.ok(teacherEntityClass);
     }

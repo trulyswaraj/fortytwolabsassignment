@@ -21,11 +21,11 @@ public class TeacherEntityClass {
     @Column(name="teacher_email", nullable = false, unique = true, length = 150)
     private String teacherEmail;
 
-    @ManyToMany(mappedBy = "teachers", fetch = FetchType.LAZY)
-//    @JsonIgnore
+    @ManyToMany(mappedBy = "teachers", fetch = FetchType.EAGER)
+    @JsonIgnore
     private Set<StudentEntityClass> students = new HashSet<>();
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "teacher_subject",
             joinColumns = @JoinColumn(name="teacher_id"),
