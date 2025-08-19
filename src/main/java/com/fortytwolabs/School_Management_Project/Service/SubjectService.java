@@ -1,37 +1,35 @@
 package com.fortytwolabs.School_Management_Project.Service;
 
 import com.fortytwolabs.School_Management_Project.Entity.SubjectEntityClass;
-import com.fortytwolabs.School_Management_Project.Repository.SubjectRepository;
-import org.springframework.stereotype.Service;
+import com.fortytwolabs.School_Management_Project.Repository.SubjectDao;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
-@Service
 public class SubjectService {
-    private final SubjectRepository subjectRepository;
+    private SubjectDao subjectDao;
 
-    public SubjectService(SubjectRepository subjectRepository){
-        this.subjectRepository=subjectRepository;
+    public SubjectService(){
+        this.subjectDao= new SubjectDao();
     }
 
-    public Set<SubjectEntityClass> getSubjectsByIds(Set<Long> subjectIds){
-        List<SubjectEntityClass> subjects = subjectRepository.findByIdIn(subjectIds);
-        return new HashSet<>(subjects);
+    public SubjectEntityClass save(SubjectEntityClass subjectEntityClass){
+        subjectDao.save(subjectEntityClass);
+        return subjectEntityClass;
     }
 
-    public SubjectEntityClass saveSubject(SubjectEntityClass subjectEntityClass){
-        return subjectRepository.save(subjectEntityClass);
+    public void addSubject(SubjectEntityClass subjectEntityClass){
+        subjectDao.save(subjectEntityClass);
     }
-
-    public List<SubjectEntityClass> getAllSubjects() {
-        return subjectRepository.findAll();
+    public SubjectEntityClass getSubjectById(Long id){
+        return subjectDao.getById(id);
     }
-
-    public Optional<SubjectEntityClass> getSubjectById(Long id) {
-        return subjectRepository.findById(id);
+    public List<SubjectEntityClass> getAllSubjects(){
+        return subjectDao.getAll();
     }
-
+    public void updateSubject(SubjectEntityClass subjectEntityClass){
+        subjectDao.updateSubject(subjectEntityClass);
+    }
+    public void deleteSubject(Long id){
+        subjectDao.deleteSubject(id);
+    }
 }
