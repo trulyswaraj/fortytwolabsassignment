@@ -14,7 +14,12 @@
         </init-param>
         <load-on-startup>1</load-on-startup>
         <async-supported>true</async-supported>
+
     </servlet>
+
+<!--    <listener>-->
+<!--        <listener-class>com.fortytwolabs.School_Management_Project.AppContextListener</listener-class>-->
+<!--    </listener>-->
 
     <servlet-mapping>
         <servlet-name>Jersey REST Service</servlet-name>

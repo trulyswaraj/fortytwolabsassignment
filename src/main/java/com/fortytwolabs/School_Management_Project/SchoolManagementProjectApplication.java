@@ -8,5 +8,4 @@ public class SchoolManagementProjectApplication extends ResourceConfig {
     public SchoolManagementProjectApplication(){
         packages("com.fortytwolabs.School_Management_Project.Resources");
     }
-
 }
