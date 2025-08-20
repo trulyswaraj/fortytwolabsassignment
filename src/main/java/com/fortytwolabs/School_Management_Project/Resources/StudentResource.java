@@ -1,14 +1,19 @@
 package com.fortytwolabs.School_Management_Project.Resources;
 
+import com.fortytwolabs.School_Management_Project.CustomThreadPool;
 import com.fortytwolabs.School_Management_Project.Entity.StudentEntityClass;
 import com.fortytwolabs.School_Management_Project.Service.StudentService;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.container.AsyncResponse;
+import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
-@Path("/api/students")
+@Path("/students")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class StudentResource {
@@ -24,54 +29,90 @@ public class StudentResource {
     // Get Student By Id
     @GET
     @Path("/{id}")
-    public Response getStudentById(@PathParam("id") Long id) {
-        StudentEntityClass student = studentService.getStudentById(id);
-        if (student != null) {
-            return Response.ok(student).build();
-        } else {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Student not found with id: " + id)
-                    .build();
-        }
+   public void getStudentById(@PathParam("id") Long id, @Suspended final AsyncResponse asyncResponse){
+        System.out.println("[Server Thread] - "  + Thread.currentThread().getName());
+        asyncResponse.setTimeout(90, TimeUnit.SECONDS);
+
+        CustomThreadPool.getInstance().submitTask(()->{
+            try{
+                StudentEntityClass studentEntityClass = studentService.getStudentById(id);
+                asyncResponse.resume(Response.ok(studentEntityClass).build());
+            } catch (Exception e) {
+                asyncResponse.resume(
+                        Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                                .entity("Error : "+e.getMessage())
+                                .build());
+            }
+        });
     }
 
     // Create A Student
     @POST
-    public Response createStudent(StudentEntityClass studentEntityClass) {
-        try {
-            studentService.addStudent(studentEntityClass);
-            return Response.status(Response.Status.CREATED).entity(studentEntityClass).build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error creating student")
-                    .build();
-        }
+    public void createStudent(StudentEntityClass studentEntityClass, @Suspended final AsyncResponse asyncResponse) {
+            System.out.println("[Server Thread] - "+Thread.currentThread().getName());
+            asyncResponse.setTimeout(90, TimeUnit.SECONDS);
+            CustomThreadPool.getInstance().submitTask(new Runnable() {
+                @Override
+                public void run() {
+                    try{
+                        StudentEntityClass createdStudent = studentService.addStudent(studentEntityClass);
+                        asyncResponse.resume(
+                                Response.status(Response.Status.CREATED)
+                                        .entity(createdStudent)
+                                        .build());
+                    } catch (Exception e) {
+                        asyncResponse.resume(
+                                Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                                        .entity("Error : " + e.getMessage())
+                                        .build()
+                        );
+                    }
+                }
+            });
     }
 
     // Update A Student
     @PUT
     @Path("/{id}")
-    public Response updateStudent(@PathParam("id") Long id, StudentEntityClass studentEntityClass) {
-        StudentEntityClass existing = studentService.getStudentById(id);
-        if (existing == null) {
-            return Response.status(Response.Status.NOT_FOUND).entity("Student not found").build();
-        }
-        existing.setName(studentEntityClass.getName());
-        existing.setEmail(studentEntityClass.getEmail());
+    public void updateStudent(@PathParam("id") Long id, StudentEntityClass studentEntityClass, @Suspended AsyncResponse asyncResponse) {
 
-        studentService.updateStudent(existing);
-        return Response.ok(existing).build();
+        CustomThreadPool.getInstance().submitTask(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    StudentEntityClass updatedStudent = studentService.updateStudent(studentEntityClass);
+                    if(updatedStudent != null){
+                        asyncResponse.resume(Response.ok(updatedStudent).build());
+                    } else {
+                        asyncResponse.resume(Response.status(Response.Status.NOT_FOUND)
+                                .entity("Student with Id " + id+ " Not found!")
+                                .build());
+                    }
+                } catch (Exception e){
+                    asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                            .entity("Error Updating Student: "+ e.getMessage())
+                            .build());
+                }
+            }
+        });
     }
 
     // Delete A Student
     @DELETE
     @Path("/{id}")
-    public Response deleteStudentById(@PathParam("id") Long id) {
-        StudentEntityClass student = studentService.getStudentById(id);
-        if (student == null) {
-            return Response.status(Response.Status.NOT_FOUND).entity("Student not found").build();
-        }
-        studentService.deleteStudent(id);
-        return Response.noContent().build();
+    public void deleteStudentById(@PathParam("id") Long id, @Suspended AsyncResponse asyncResponse) {
+        CustomThreadPool.getInstance().submitTask(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    studentService.deleteStudent(id);
+                    asyncResponse.resume(Response.ok("Student With id " + id + " deleted successfully!"));
+                } catch (Exception e) {
+                    asyncResponse.resume(Response.status(Response.Status.NOT_FOUND)
+                            .entity("Student with Id " + id + " not Found!" + e.getMessage())
+                            .build());
+                }
+            }
+        });
     }
 }

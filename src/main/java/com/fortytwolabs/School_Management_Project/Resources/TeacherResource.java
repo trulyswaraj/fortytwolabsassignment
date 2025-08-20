@@ -1,18 +1,20 @@
 package com.fortytwolabs.School_Management_Project.Resources;
 
+import com.fortytwolabs.School_Management_Project.CustomThreadPool;
 import com.fortytwolabs.School_Management_Project.Entity.StudentEntityClass;
 import com.fortytwolabs.School_Management_Project.Entity.SubjectEntityClass;
 import com.fortytwolabs.School_Management_Project.Entity.TeacherEntityClass;
 import com.fortytwolabs.School_Management_Project.Service.TeacherService;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.container.AsyncResponse;
+import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
-import java.util.Optional;
 
 
-@Path("/api/teachers")
+@Path("/teachers")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class TeacherResource {
@@ -24,100 +26,183 @@ public class TeacherResource {
     }
 
     @GET
-    public Response getAllTeachers() {
-        List<TeacherEntityClass> teachers = teacherService.getAllTeachers();
-        return Response.ok(teachers).build();
+    public void getAllTeachers(@Suspended AsyncResponse asyncResponse) {
+        CustomThreadPool.getInstance().submitTask(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    List<TeacherEntityClass> teachers = teacherService.getAllTeachers();
+                    asyncResponse.resume(Response.ok(teachers).build());
+                } catch (Exception e) {
+                    asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                            .entity("Error While Fetching All Teachers : " + e.getMessage()).build());
+                }
+            }
+        });
     }
 
     @GET
     @Path("/{id}")
-    public Response getTeacherById(@PathParam("id") Long id) {
-        TeacherEntityClass teacher = teacherService.getTeacherById(id);
-        if (teacher != null) {
-            return Response.ok(teacher).build();
-        } else {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Teacher not found with id: " + id)
-                    .build();
-        }
+    public void getTeacherById(@PathParam("id") Long id, @Suspended AsyncResponse asyncResponse) {
+        CustomThreadPool.getInstance().submitTask(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    TeacherEntityClass teacher = teacherService.getTeacherById(id);
+                    asyncResponse.resume(Response.ok(teacher).build());
+                } catch (Exception e) {
+                    asyncResponse.resume(Response.status(Response.Status.NOT_FOUND)
+                            .entity("Teacher with given id : " + id + " not found.")
+                            .build());
+                }
+            }
+        });
+
     }
 
     @POST
-    public Response createTeacher(TeacherEntityClass teacher) {
-        teacherService.addTeacher(teacher);
-        return Response.status(Response.Status.CREATED).entity(teacher).build();
+    public void createTeacher(TeacherEntityClass teacher, @Suspended AsyncResponse asyncResponse) {
+        CustomThreadPool.getInstance().submitTask(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    teacherService.addTeacher(teacher);
+                    asyncResponse.resume(Response.status(Response.Status.CREATED)
+                            .entity(teacher)
+                            .build());
+                } catch (Exception e) {
+                    asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                            .entity("Error Creating Teacher : " + e.getMessage())
+                            .build());
+                }
+            }
+        });
     }
 
     @PUT
     @Path("/{id}")
-    public Response updateTeacher(@PathParam("id") Long id, TeacherEntityClass teacherDetails) {
-        TeacherEntityClass existing = teacherService.getTeacherById(id);
-        if (existing == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Teacher not found")
-                    .build();
-        }
-        existing.setTeacherName(teacherDetails.getTeacherName());
-        existing.setTeacherEmail(teacherDetails.getTeacherEmail());
-        teacherService.updateTeacher(existing);
-        return Response.ok(existing).build();
+    public void updateTeacher(@PathParam("id") Long id, TeacherEntityClass teacherDetails, @Suspended AsyncResponse asyncResponse) {
+        CustomThreadPool.getInstance().submitTask(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    TeacherEntityClass existing = teacherService.getTeacherById(id);
+                    if (existing == null) {
+                        asyncResponse.resume(Response.status(Response.Status.NOT_FOUND)
+                                .entity("Teacher Not Found!")
+                                .build());
+                        return;
+                    }
+                    existing.setTeacherName(teacherDetails.getTeacherName());
+                    existing.setTeacherEmail(teacherDetails.getTeacherEmail());
+                    teacherService.updateTeacher(existing);
+                    asyncResponse.resume(Response.ok(existing).build());
+                } catch (Exception e) {
+                    asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                            .entity("Error While Updating Teacher : " + e.getMessage())
+                            .build());
+                }
+            }
+        });
     }
 
     @DELETE
     @Path("/{id}")
-    public Response deleteTeacher(@PathParam("id") Long id) {
-        TeacherEntityClass existing = teacherService.getTeacherById(id);
-        if (existing == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Teacher not found")
-                    .build();
-        }
-        teacherService.deleteTeacher(id);
-        return Response.noContent().build();
+    public void deleteTeacher(@PathParam("id") Long id, @Suspended AsyncResponse asyncResponse) {
+        CustomThreadPool.getInstance().submitTask(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    TeacherEntityClass existing = teacherService.getTeacherById(id);
+                    if (existing == null) {
+                        asyncResponse.resume(Response.status(Response.Status.NOT_FOUND)
+                                .entity("Teacher With given id " + id + " not found!")
+                                .build());
+                        return;
+                    }
+                    teacherService.deleteTeacher(id);
+                    asyncResponse.resume(Response.noContent().build());
+                } catch (Exception e) {
+                    asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                            .entity("Error Deleting Teacher : " + e.getMessage())
+                            .build());
+                }
+            }
+        });
     }
 
     // Assign a subject to a teacher
     @POST
     @Path("/{teacherId}/subjects/{subjectId}")
-    public Response assignSubjectToTeacher(@PathParam("teacherId") Long teacherId,
-                                           @PathParam("subjectId") Long subjectId) {
-        SubjectEntityClass subject = teacherService.getSubjectById(subjectId); // fetch entity
-        if (subject == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Subject not found")
-                    .build();
-        }
-        TeacherEntityClass updatedTeacher = teacherService.assignTeacherToSubject(teacherId, subject);
-        return Response.ok(updatedTeacher).build();
+    public void assignSubjectToTeacher(@PathParam("teacherId") Long teacherId,
+                                       @PathParam("subjectId") Long subjectId,
+                                       @Suspended AsyncResponse asyncResponse) {
+        CustomThreadPool.getInstance().submitTask(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    SubjectEntityClass subject = teacherService.getSubjectById(subjectId); // fetch entity
+                    if (subject == null) {
+                        asyncResponse.resume(Response.status(Response.Status.NOT_FOUND)
+                                .entity("Subject Not Found!")
+                                .build());
+                        return;
+                    }
+                    TeacherEntityClass updatedTeacher = teacherService.assignTeacherToStudent(teacherId, subjectId);
+                    asyncResponse.resume(Response.ok(updatedTeacher).build());
+                } catch (Exception e) {
+                    asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                            .entity("Error assigning Subject : " + e.getMessage())
+                            .build());
+                }
+            }
+        });
     }
 
     // Assign a student to a teacher
     @POST
     @Path("/{teacherId}/students/{studentId}")
-    public Response assignStudentToTeacher(@PathParam("teacherId") Long teacherId,
-                                           @PathParam("studentId") Long studentId) {
-        StudentEntityClass student = teacherService.getStudentById(studentId); // fetch entity
-        if (student == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Student not found")
-                    .build();
-        }
-        TeacherEntityClass updatedTeacher = teacherService.assignTeacherToStudent(teacherId, student);
-        return Response.ok(updatedTeacher).build();
+    public void assignStudentToTeacher(@PathParam("teacherId") Long teacherId,
+                                       @PathParam("studentId") Long studentId,
+                                       @Suspended AsyncResponse asyncResponse) {
+        CustomThreadPool.getInstance().submitTask(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    TeacherEntityClass updatedTeacher = teacherService.assignTeacherToStudent(teacherId, studentId);
+                    asyncResponse.resume(Response.ok(updatedTeacher).build());
+                } catch (Exception e) {
+                    asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                            .entity("Error assigning Student : " + e.getMessage())
+                            .build());
+                }
+            }
+        });
     }
-
     // Update teacher's subjects
     @POST
     @Path("/{teacherId}/update-subject/{subjectId}")
-    public Response updateTeacherSubjects(@PathParam("teacherId") Long teacherId,
-                                          @PathParam("subjectId") Long subjectId) {
-        SubjectEntityClass subject = teacherService.getSubjectById(subjectId); // fetch entity
-        if (subject == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Subject not found")
-                    .build();
-        }
-        TeacherEntityClass updatedTeacher = teacherService.updateTeacherSubjects(teacherId, subject);
-        return Response.ok(updatedTeacher).build();
+    public void updateTeacherSubjects(@PathParam("teacherId") Long teacherId,
+                                      @PathParam("subjectId") Long subjectId,
+                                      @Suspended AsyncResponse asyncResponse) {
+        CustomThreadPool.getInstance().submitTask(() -> {
+            try {
+                SubjectEntityClass subject = teacherService.getSubjectById(subjectId); // fetch entity
+                if (subject == null) {
+                    asyncResponse.resume(Response.status(Response.Status.NOT_FOUND)
+                            .entity("Subject not found.")
+                            .build());
+                    return;
+                }
+                TeacherEntityClass updatedTeacher = teacherService.updateTeacherSubjects(teacherId, subject);
+                asyncResponse.resume(Response.ok(updatedTeacher).build());
+            } catch (Exception e) {
+                asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity("Error Updating the Subjects" + e.getMessage())
+                        .build());
+            }
+        });
+
+
     }
 }

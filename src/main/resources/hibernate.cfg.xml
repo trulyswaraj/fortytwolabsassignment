@@ -26,9 +26,9 @@
         <property name="hibernate.hbm2ddl.auto">update</property>
 
         <!-- List of annotated entity classes -->
-        <mapping class="com.yourpackage.entity.Student"/>
-        <mapping class="com.yourpackage.entity.Teacher"/>
-        <mapping class="com.yourpackage.entity.Subject"/>
+        <mapping class="com.fortytwolabs.School_Management_Project.Entity.StudentEntityClass"/>
+        <mapping class="com.fortytwolabs.School_Management_Project.Entity.SubjectEntityClass"/>
+        <mapping class="com.fortytwolabs.School_Management_Project.Entity.TeacherEntityClass"/>
 
     </session-factory>
 </hibernate-configuration>

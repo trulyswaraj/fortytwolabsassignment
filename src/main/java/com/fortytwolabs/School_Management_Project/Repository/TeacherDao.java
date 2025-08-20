@@ -116,18 +116,19 @@ public class TeacherDao {
         return teacherEntityClass;
     }
 
-    public TeacherEntityClass assignTeacherToStudent(Long teacherId, StudentEntityClass studentEntityClass){
+    public TeacherEntityClass assignTeacherToStudent(Long teacherId, StudentEntityClass studentEntityClass) {
         Transaction transaction = null;
         TeacherEntityClass teacherEntityClass = null;
 
-        try(Session session = HibernateUtil.getSessionFactory().openSession()){
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             transaction = session.beginTransaction();
 
             teacherEntityClass = session.get(TeacherEntityClass.class, teacherId);
-            if(teacherEntityClass == null){
-                throw new RuntimeException("Teacher With given Id not found!");
+            if (teacherEntityClass == null) {
+                throw new RuntimeException("Teacher with given Id not found!");
             }
 
+            // Add the student to teacher and vice versa
             teacherEntityClass.getStudents().add(studentEntityClass);
             studentEntityClass.getTeachers().add(teacherEntityClass);
 
@@ -135,8 +136,8 @@ public class TeacherDao {
             session.merge(studentEntityClass);
 
             transaction.commit();
-        } catch(Exception e){
-            if(transaction != null) transaction.rollback();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
             e.printStackTrace();
         }
         return teacherEntityClass;

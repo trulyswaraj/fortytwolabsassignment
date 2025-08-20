@@ -6,7 +6,6 @@ import com.fortytwolabs.School_Management_Project.Entity.TeacherEntityClass;
 import com.fortytwolabs.School_Management_Project.Repository.*;
 
 import java.util.List;
-import java.util.Optional;
 
 public class TeacherService {
 
@@ -53,9 +52,15 @@ public class TeacherService {
         return teacherDao.assignTeacherToSubject(teacherId, subjectEntityClass);
     }
 
-    public TeacherEntityClass assignTeacherToStudent(Long teacherId, StudentEntityClass studentEntityClass){
-        return teacherDao.assignTeacherToStudent(teacherId, studentEntityClass);
+    public TeacherEntityClass assignTeacherToStudent(Long teacherId, Long studentId) {
+        // Fetch the student entity first
+        StudentEntityClass student = studentDao.getById(studentId);
+        if (student == null) {
+            throw new RuntimeException("Student not found with id: " + studentId);
+        }
+        return teacherDao.assignTeacherToStudent(teacherId, student);
     }
+
 
     public TeacherEntityClass updateTeacherSubjects(Long teacherId, SubjectEntityClass subjectEntityClass){
         return teacherDao.updateTeachersSubjects(teacherId, subjectEntityClass);

@@ -15,12 +15,13 @@ public class StudentService {
         this.studentDao = new StudentDao();
     }
 
-    public void addStudent(StudentEntityClass studentEntityClass) throws SystemException {
+    public StudentEntityClass addStudent(StudentEntityClass studentEntityClass) throws SystemException {
         try{
             studentDao.save(studentEntityClass);
         } catch (Exception e){
             throw new SystemException("Error While Adding student : "+ studentEntityClass.getName());
         }
+        return studentEntityClass;
     }
 
     public StudentEntityClass getStudentById(Long id){
