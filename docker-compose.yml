@@ -1,0 +1,30 @@
+
+services:
+  tomcat-app:
+    build: .
+    container_name: my-tomcat-container
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./logs:/usr/local/tomcat/logs
+      - ./hibernate.cfg.xml:/usr/local/tomcat/hibernate.cfg.xml
+    depends_on:
+      - mysql-db
+    restart: always
+
+  mysql-db:
+    image: mysql:8.0
+    container_name: my-sql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: manager
+      MYSQL_DATABASE: school_management
+      MYSQL_USER: W1_87109_Swaraj
+      MYSQL_PASSWORD: manager
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+
+volumes:
+  db_data:
