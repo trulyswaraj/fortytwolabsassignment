@@ -28,16 +28,30 @@ public class StudentService {
         return studentDao.getById(id);
     }
 
+    public StudentEntityClass getByIdUsingCriteria(Long id){
+        return studentDao.getByIdUsingCriteria(id);
+    }
+
     public List<StudentEntityClass> getAllStudents(){
         return studentDao.getAllStudents();
     }
+
+    public List<StudentEntityClass> getAllStudentsUsingCriteria(){return studentDao.getAllStudentCriteria();}
 
     public StudentEntityClass updateStudent(StudentEntityClass studentEntityClass){
         return studentDao.update(studentEntityClass);
     }
 
+    public StudentEntityClass updateStudentUsingCriteria(Long id, StudentEntityClass studentEntityClass){
+        return studentDao.updateStudentUsingCriteria(id, studentEntityClass);
+    }
+
     public void deleteStudent(Long id){
         studentDao.delete(id);
+    }
+
+    public void deleteStudentUsingCriteria(Long id){
+        studentDao.deleteUsingCriteria(id);
     }
 
 }

@@ -31,7 +31,7 @@ public class TeacherResource {
             @Override
             public void run() {
                 try {
-                    List<TeacherEntityClass> teachers = teacherService.getAllTeachers();
+                    List<TeacherEntityClass> teachers = teacherService.getTeacherUsingCriteria();
                     asyncResponse.resume(Response.ok(teachers).build());
                 } catch (Exception e) {
                     asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -48,7 +48,7 @@ public class TeacherResource {
             @Override
             public void run() {
                 try {
-                    TeacherEntityClass teacher = teacherService.getTeacherById(id);
+                    TeacherEntityClass teacher = teacherService.getByIdUsingCriteria(id);
                     asyncResponse.resume(Response.ok(teacher).build());
                 } catch (Exception e) {
                     asyncResponse.resume(Response.status(Response.Status.NOT_FOUND)
@@ -95,7 +95,7 @@ public class TeacherResource {
                     }
                     existing.setTeacherName(teacherDetails.getTeacherName());
                     existing.setTeacherEmail(teacherDetails.getTeacherEmail());
-                    teacherService.updateTeacher(existing);
+                    teacherService.updateTeacherUsingCriteria(existing);
                     asyncResponse.resume(Response.ok(existing).build());
                 } catch (Exception e) {
                     asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -120,7 +120,7 @@ public class TeacherResource {
                                 .build());
                         return;
                     }
-                    teacherService.deleteTeacher(id);
+                    teacherService.deleteTeacherUsingCriteria(id);
                     asyncResponse.resume(Response.noContent().build());
                 } catch (Exception e) {
                     asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -134,7 +134,7 @@ public class TeacherResource {
     // Assign a subject to a teacher
     @POST
     @Path("/{teacherId}/subjects/{subjectId}")
-    public void assignSubjectToTeacher(@PathParam("teacherId") Long teacherId,
+    public void assignTeacherToSubject(@PathParam("teacherId") Long teacherId,
                                        @PathParam("subjectId") Long subjectId,
                                        @Suspended AsyncResponse asyncResponse) {
         CustomThreadPool.getInstance().submitTask(new Runnable() {
@@ -148,7 +148,7 @@ public class TeacherResource {
                                 .build());
                         return;
                     }
-                    TeacherEntityClass updatedTeacher = teacherService.assignTeacherToStudent(teacherId, subjectId);
+                    TeacherEntityClass updatedTeacher = teacherService.assignTeacherToSubject(teacherId, subject);
                     asyncResponse.resume(Response.ok(updatedTeacher).build());
                 } catch (Exception e) {
                     asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -162,7 +162,7 @@ public class TeacherResource {
     // Assign a student to a teacher
     @POST
     @Path("/{teacherId}/students/{studentId}")
-    public void assignStudentToTeacher(@PathParam("teacherId") Long teacherId,
+    public void assignTeacherToStudent(@PathParam("teacherId") Long teacherId,
                                        @PathParam("studentId") Long studentId,
                                        @Suspended AsyncResponse asyncResponse) {
         CustomThreadPool.getInstance().submitTask(new Runnable() {

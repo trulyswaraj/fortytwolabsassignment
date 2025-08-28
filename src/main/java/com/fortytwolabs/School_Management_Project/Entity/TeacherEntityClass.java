@@ -1,6 +1,7 @@
 package com.fortytwolabs.School_Management_Project.Entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
@@ -22,7 +23,7 @@ public class TeacherEntityClass {
     private String teacherEmail;
 
     @ManyToMany(mappedBy = "teachers", fetch = FetchType.EAGER)
-    @JsonIgnore
+    @JsonManagedReference
     private Set<StudentEntityClass> students = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.EAGER)

@@ -1,5 +1,6 @@
 package com.fortytwolabs.School_Management_Project.Entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
@@ -37,7 +38,8 @@ public class StudentEntityClass {
 
     //MANY-TO-MANY mapping for Multiple Students can have Multiple Teachers and vice versa.
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JsonIgnore
+    @JsonBackReference
+
     @JoinTable(
             name="students_teachers",
             joinColumns = @JoinColumn(name="student_id"),

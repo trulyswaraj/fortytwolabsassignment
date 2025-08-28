@@ -8,7 +8,7 @@
 
         <!-- JDBC connection settings -->
         <property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
-        <property name="hibernate.connection.url">jdbc:mysql://mysql-db:3306/school_management</property>
+        <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/school_management</property>
         <property name="hibernate.connection.username">W1_87109_Swaraj</property>
         <property name="hibernate.connection.password">manager</property>
 

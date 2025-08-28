@@ -50,11 +50,11 @@ public class SubjectResource {
             @Override
             public void run() {
                 try{
-                    List<SubjectEntityClass> subjects = subjectService.getAllSubjects();
+                    List<SubjectEntityClass> subjects = subjectService.getAllUsingCriteria();
                     asyncResponse.resume(Response.ok(subjects).build());
                 } catch (Exception e){
                     asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                            .entity("Error while Fetchinig All subjects : " + e.getMessage())
+                            .entity("Error while Fetching All subjects : " + e.getMessage())
                             .build());
                 }
             }
@@ -69,7 +69,7 @@ public class SubjectResource {
             @Override
             public void run() {
                 try{
-                    SubjectEntityClass subject = subjectService.getSubjectById(id);
+                    SubjectEntityClass subject = subjectService.getByIdUsingCriteria(id);
                     if(subject != null){
                         asyncResponse.resume(Response.ok(subject).build());
                     } else {
@@ -84,4 +84,47 @@ public class SubjectResource {
             }
         });
     }
+
+    @PUT
+    @Path("/{id}")
+    public void updateSubject(@PathParam("id") Long id, SubjectEntityClass subjectEntityClass, @Suspended AsyncResponse asyncResponse){
+        subjectEntityClass.setId(id);
+        CustomThreadPool.getInstance().submitTask(() -> {
+            try{
+
+                subjectService.updateSubjectUsingCriteria(subjectEntityClass);
+                asyncResponse.resume(
+                        Response.ok("Subject With Given Id "+ id + " Updated successfully.").build()
+                );
+            }catch (Exception e){
+                asyncResponse.resume(
+                        Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                                .entity("Error Updating Subject : " + e.getMessage())
+                                .build()
+                );
+            }
+        });
+
+    }
+
+    @DELETE
+    @Path("/{id}")
+    public void deleteSubject(@PathParam("id") Long id, @Suspended AsyncResponse asyncResponse){
+        CustomThreadPool.getInstance().submitTask(() -> {
+            try{
+                subjectService.deleteSubject(id);
+                asyncResponse.resume(
+                        Response.ok("Subject with Id "+id+" deleted Successfully!").build()
+                );
+            } catch (Exception e){
+                asyncResponse.resume(
+                        Response.status(Response.Status.NOT_FOUND)
+                                .entity("Subject with id " + id + " not found!" + e.getMessage())
+                                .build()
+                );
+            }
+        });
+    }
+
+
 }

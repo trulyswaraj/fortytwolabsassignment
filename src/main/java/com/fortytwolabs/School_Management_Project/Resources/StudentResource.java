@@ -23,7 +23,7 @@ public class StudentResource {
     // Get All Students
     @GET
     public List<StudentEntityClass> getAllStudents() {
-        return studentService.getAllStudents();
+        return studentService.getAllStudentsUsingCriteria();
     }
 
     // Get Student By Id
@@ -35,7 +35,7 @@ public class StudentResource {
 
         CustomThreadPool.getInstance().submitTask(()->{
             try{
-                StudentEntityClass studentEntityClass = studentService.getStudentById(id);
+                StudentEntityClass studentEntityClass = studentService.getByIdUsingCriteria(id);
                 asyncResponse.resume(Response.ok(studentEntityClass).build());
             } catch (Exception e) {
                 asyncResponse.resume(
@@ -80,7 +80,8 @@ public class StudentResource {
             @Override
             public void run() {
                 try{
-                    StudentEntityClass updatedStudent = studentService.updateStudent(studentEntityClass);
+
+                    StudentEntityClass updatedStudent = studentService.updateStudentUsingCriteria(id,studentEntityClass);
                     if(updatedStudent != null){
                         asyncResponse.resume(Response.ok(updatedStudent).build());
                     } else {
@@ -105,8 +106,8 @@ public class StudentResource {
             @Override
             public void run() {
                 try {
-                    studentService.deleteStudent(id);
-                    asyncResponse.resume(Response.ok("Student With id " + id + " deleted successfully!"));
+                    studentService.deleteStudentUsingCriteria(id);
+                    asyncResponse.resume(Response.ok("Student With id " + id + " deleted successfully!").build());
                 } catch (Exception e) {
                     asyncResponse.resume(Response.status(Response.Status.NOT_FOUND)
                             .entity("Student with Id " + id + " not Found!" + e.getMessage())

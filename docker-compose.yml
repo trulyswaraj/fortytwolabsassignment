@@ -2,7 +2,7 @@
 services:
   tomcat-app:
     build: .
-    container_name: my-tomcat-container
+    container_name: tomcat-container
     ports:
       - "8080:8080"
     volumes:
@@ -14,7 +14,7 @@ services:
 
   mysql-db:
     image: mysql:8.0
-    container_name: my-sql-container
+    container_name: sql-container
     environment:
       MYSQL_ROOT_PASSWORD: manager
       MYSQL_DATABASE: school_management

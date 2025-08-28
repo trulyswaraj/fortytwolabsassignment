@@ -23,13 +23,19 @@ public class SubjectService {
     public SubjectEntityClass getSubjectById(Long id){
         return subjectDao.getById(id);
     }
+    public SubjectEntityClass getByIdUsingCriteria(Long id){return subjectDao.getByIdUsingCriteria(id);}
     public List<SubjectEntityClass> getAllSubjects(){
         return subjectDao.getAll();
     }
+    public List<SubjectEntityClass> getAllUsingCriteria(){return subjectDao.getAllUsingCriteria();}
     public void updateSubject(SubjectEntityClass subjectEntityClass){
         subjectDao.updateSubject(subjectEntityClass);
     }
+    public void updateSubjectUsingCriteria(SubjectEntityClass subjectEntityClass){
+        SubjectEntityClass subjectEntityClass1 = getByIdUsingCriteria(subjectEntityClass.getId());
+        subjectEntityClass1.setName(subjectEntityClass.getName());
+        subjectDao.updateSubjectUsingCriteria(subjectEntityClass);}
     public void deleteSubject(Long id){
-        subjectDao.deleteSubject(id);
+        subjectDao.deleteSubjectUsingCriteria(id);
     }
 }
