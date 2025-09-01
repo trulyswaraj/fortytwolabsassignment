@@ -148,7 +148,7 @@ public class TeacherResource {
                                 .build());
                         return;
                     }
-                    TeacherEntityClass updatedTeacher = teacherService.assignTeacherToSubject(teacherId, subject);
+                    TeacherEntityClass updatedTeacher = teacherService.assignTeacherToSubject(teacherId, subjectId);
                     asyncResponse.resume(Response.ok(updatedTeacher).build());
                 } catch (Exception e) {
                     asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)

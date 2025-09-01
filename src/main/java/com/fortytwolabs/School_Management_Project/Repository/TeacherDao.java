@@ -8,6 +8,7 @@ import jakarta.persistence.criteria.*;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
+import java.util.HashSet;
 import java.util.List;
 
 public class TeacherDao {
@@ -35,6 +36,9 @@ public class TeacherDao {
             CriteriaBuilder cb = session.getCriteriaBuilder();
             CriteriaQuery<TeacherEntityClass> cq = cb.createQuery(TeacherEntityClass.class);
             Root<TeacherEntityClass> root = cq.from(TeacherEntityClass.class);
+            root.fetch("students", JoinType.LEFT);
+            root.fetch("subjects", JoinType.LEFT);
+
             cq.select(root).where(cb.equal(root.get("id"), id));
 
             return session.createQuery(cq).uniqueResult();
@@ -53,10 +57,13 @@ public class TeacherDao {
             CriteriaBuilder cb = session.getCriteriaBuilder();
             CriteriaQuery<TeacherEntityClass> cq = cb.createQuery(TeacherEntityClass.class);
             Root<TeacherEntityClass> root = cq.from(TeacherEntityClass.class);
+            root.fetch("students", JoinType.LEFT);
+            root.fetch("subjects", JoinType.LEFT);
+            cq.select(root).distinct(true);
 
-            cq.select(root);
+            List<TeacherEntityClass> teachers = session.createQuery(cq).getResultList();
 
-            return session.createQuery(cq).getResultList();
+            return teachers;
 
         }
     }
@@ -154,7 +161,7 @@ public class TeacherDao {
 //        return teacherEntityClass;
 //    }
 
-    public TeacherEntityClass assignTeacherToSubjectUsingCriteria(Long teacherId, SubjectEntityClass subjectEntityClass ){
+    public TeacherEntityClass assignTeacherToSubjectUsingCriteria(Long teacherId, Long subjectId ){
         Transaction transaction = null;
         TeacherEntityClass teacherEntityClass = null;
 
@@ -165,24 +172,33 @@ public class TeacherDao {
             CriteriaQuery<TeacherEntityClass> cq = cb.createQuery(TeacherEntityClass.class);
 
             Root<TeacherEntityClass> teacherRoot = cq.from(TeacherEntityClass.class);
-            teacherRoot.join("subjects", JoinType.LEFT);
-
+            teacherRoot.fetch("subjects", JoinType.LEFT);
             cq.select(teacherRoot).where(cb.equal(teacherRoot.get("id"), teacherId)).distinct(true);
-
             teacherEntityClass = session.createQuery(cq).uniqueResult();
 
             if(teacherEntityClass == null){
                 throw new RuntimeException("Teacher Not Found!");
             }
 
-            SubjectEntityClass managedSubject = session.merge(subjectEntityClass);
+            SubjectEntityClass subjectEntityClass = session.get(SubjectEntityClass.class, subjectId);
+            if(subjectEntityClass == null){
+                throw new RuntimeException("Subject Not Found");
+            }
 
+            if(teacherEntityClass.getSubjects() == null) teacherEntityClass.setSubjects(new HashSet<>());
+            //if(subjectEntityClass.getTeachers() == null) subjectEntityClass.setTeachers(new HashSet<>());
 
             teacherEntityClass.getSubjects().add(subjectEntityClass);
-            subjectEntityClass.getTeachers().add(teacherEntityClass);
+            //subjectEntityClass.getTeachers().add(teacherEntityClass);
+
+           // SubjectEntityClass managedSubject = session.merge(subjectId);
+
+
+//            teacherEntityClass.getSubjects().add(subjectEntityClass);
+//            subjectEntityClass.getTeachers().add(teacherEntityClass);
 
             session.merge(teacherEntityClass);
-            session.merge(subjectEntityClass);
+           // session.merge(subjectEntityClass);
 
             transaction.commit();
        } catch (Exception e){

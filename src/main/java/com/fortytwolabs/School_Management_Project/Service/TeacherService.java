@@ -58,8 +58,8 @@ public class TeacherService {
     }
 
 
-    public TeacherEntityClass assignTeacherToSubject(Long teacherId, SubjectEntityClass subjectEntityClass){
-        return teacherDao.assignTeacherToSubjectUsingCriteria(teacherId, subjectEntityClass);
+    public TeacherEntityClass assignTeacherToSubject(Long teacherId, Long subjectId){
+        return teacherDao.assignTeacherToSubjectUsingCriteria(teacherId, subjectId);
     }
 
     public TeacherEntityClass assignTeacherToStudent(Long teacherId, Long studentId) {

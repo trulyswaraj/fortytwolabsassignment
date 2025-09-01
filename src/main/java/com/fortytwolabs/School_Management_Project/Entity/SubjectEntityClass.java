@@ -1,10 +1,14 @@
 package com.fortytwolabs.School_Management_Project.Entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
 import java.util.Set;
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id"
+)
 
 @Entity
 @Table(name = "subjects")
@@ -18,9 +22,11 @@ public class SubjectEntityClass {
     @Column(name = "subject_name")
     private String name;
 
-    @ManyToMany(fetch = FetchType.EAGER, mappedBy = "subjects")
-    @JsonIgnore
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "subjects")
     private Set<TeacherEntityClass> teachers = new HashSet<>();
+
+    @ManyToMany(mappedBy = "subjects")
+    private Set<StudentEntityClass> students = new HashSet<>();
 
     public SubjectEntityClass(){
 

@@ -32,11 +32,13 @@ public class StudentService {
         return studentDao.getByIdUsingCriteria(id);
     }
 
-    public List<StudentEntityClass> getAllStudents(){
-        return studentDao.getAllStudents();
+    public long getTotalStudents(){
+        return studentDao.getTotalStudents();
     }
 
-    public List<StudentEntityClass> getAllStudentsUsingCriteria(){return studentDao.getAllStudentCriteria();}
+    public List<StudentEntityClass> getAllStudentsUsingCriteria(int pageNumber, int pageSize){
+        return studentDao.getAllStudentCriteria(pageNumber, pageSize);
+    }
 
     public StudentEntityClass updateStudent(StudentEntityClass studentEntityClass){
         return studentDao.update(studentEntityClass);

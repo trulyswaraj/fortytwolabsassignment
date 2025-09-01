@@ -9,7 +9,9 @@ import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -20,10 +22,21 @@ public class StudentResource {
 
     private final StudentService studentService = new StudentService();
 
-    // Get All Students
+      // Get All Students
     @GET
-    public List<StudentEntityClass> getAllStudents() {
-        return studentService.getAllStudentsUsingCriteria();
+    public Response getAllStudents(@QueryParam("page") @DefaultValue("1") int page,
+                                                   @QueryParam("size") @DefaultValue("10") int size) {
+
+        List<StudentEntityClass> students = studentService.getAllStudentsUsingCriteria(page, size);
+        long totalItems = studentService.getTotalStudents();
+        int totalPages = (int) Math.ceil((double) totalItems / size);
+        Map<String, Object> response = new HashMap<>();
+        response.put("Data", students);
+        response.put("Total Items", totalItems);
+        response.put("Page Number",page);
+        response.put("Page Size", size);
+        response.put("TotalPages", totalPages);
+        return Response.ok(response).build();
     }
 
     // Get Student By Id

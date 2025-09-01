@@ -1,9 +1,11 @@
 package com.fortytwolabs.School_Management_Project.Repository;
 
 import com.fortytwolabs.School_Management_Project.Entity.StudentEntityClass;
+import com.fortytwolabs.School_Management_Project.Entity.TeacherEntityClass;
 import com.fortytwolabs.School_Management_Project.util.HibernateUtil;
 import jakarta.persistence.criteria.*;
 import jakarta.transaction.SystemException;
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
@@ -48,14 +50,54 @@ public class StudentDao {
         }
     }
 
-    public List<StudentEntityClass> getAllStudentCriteria(){
+//    public List<StudentEntityClass> getAllStudentCriteria(int pageNumber, int pageSize){
+//        try(Session session = HibernateUtil.getSessionFactory().openSession()){
+//            CriteriaBuilder cb = session.getCriteriaBuilder();
+//            CriteriaQuery<StudentEntityClass> cq = cb.createQuery(StudentEntityClass.class);
+//            Root<StudentEntityClass> root = cq.from(StudentEntityClass.class);
+//            root.fetch("teachers", JoinType.LEFT);
+//            root.fetch("subjects", JoinType.LEFT);
+//            cq.select(root).distinct(true);
+//
+//            int offset = (pageNumber -1 )*pageSize;
+//            List<StudentEntityClass> students = session.createQuery(cq)
+//                    .setFirstResult(offset)
+//                    .setMaxResults(pageSize)
+//                    .getResultList();
+//
+//            return students;
+//           // return session.createQuery(cq).getResultList();
+//        }
+//    }
+
+    public List<StudentEntityClass> getAllStudentCriteria(int page, int size) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            List<StudentEntityClass> students = session.createQuery("from StudentEntityClass", StudentEntityClass.class)
+                    .setFirstResult((page - 1) * size)
+                    .setMaxResults(size)
+                    .getResultList();
+
+            // Initialize lazy collections
+            for (StudentEntityClass s : students) {
+                Hibernate.initialize(s.getTeachers());
+                Hibernate.initialize(s.getSubjects());
+                // Also initialize each teacher's students if needed
+                for (TeacherEntityClass t : s.getTeachers()) {
+                    Hibernate.initialize(t.getStudents());
+                }
+            }
+
+            return students;
+        }
+    }
+
+
+    public long getTotalStudents(){
         try(Session session = HibernateUtil.getSessionFactory().openSession()){
             CriteriaBuilder cb = session.getCriteriaBuilder();
-            CriteriaQuery<StudentEntityClass> cq = cb.createQuery(StudentEntityClass.class);
-            Root<StudentEntityClass> root = cq.from(StudentEntityClass.class);
-
-            cq.select(root);
-            return session.createQuery(cq).getResultList();
+            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            cq.select(cb.count(cq.from(StudentEntityClass.class)));
+            return session.createQuery(cq).getSingleResult();
         }
     }
 
