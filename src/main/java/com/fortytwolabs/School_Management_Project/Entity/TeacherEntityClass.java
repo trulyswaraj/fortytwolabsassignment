@@ -1,46 +1,43 @@
 package com.fortytwolabs.School_Management_Project.Entity;
 
-import com.fasterxml.jackson.annotation.*;
-import jakarta.persistence.*;
-
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fortytwolabs.School_Management_Project.util.CounterUtil;
+import dev.morphia.Datastore;
+import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Id;
+import dev.morphia.annotations.Reference;
 import java.util.HashSet;
 import java.util.Set;
 
-@Entity
-@Table(name="teachers")
+@Entity("teachers")
 public class TeacherEntityClass {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="teacher_id", nullable = false)
     private Long teacherId;
 
-    @Column(name="teacher_name", nullable = false, length = 150)
     private String teacherName;
-
-    @Column(name="teacher_email", nullable = false, unique = true, length = 150)
     private String teacherEmail;
 
-    @ManyToMany(mappedBy = "teachers", fetch = FetchType.LAZY)
+    @Reference(lazy = true)
+    @JsonBackReference
     private Set<StudentEntityClass> students = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "teacher_subject",
-            joinColumns = @JoinColumn(name="teacher_id"),
-            inverseJoinColumns = @JoinColumn(name="subject_id")
-    )
+    @Reference(lazy = true)
+    @JsonManagedReference
     private Set<SubjectEntityClass> subjects = new HashSet<>();
 
     //Default Constructor
-    public TeacherEntityClass(){
-
-    }
+    public TeacherEntityClass(){}
 
     //Parameterized Constructor
     public TeacherEntityClass(String teacherName, String teacherEmail){
         this.teacherName=teacherName;
         this.teacherEmail=teacherEmail;
+    }
+
+    public void generateId(Datastore datastore){
+        this.teacherId= CounterUtil.getNextSequence("teacher_id", datastore);
     }
 
     public Long getTeacherId(){

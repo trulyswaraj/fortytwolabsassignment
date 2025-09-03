@@ -1,55 +1,35 @@
 package com.fortytwolabs.School_Management_Project.Entity;
 
-import com.fasterxml.jackson.annotation.*;
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fortytwolabs.School_Management_Project.util.CounterUtil;
+import dev.morphia.Datastore;
+import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Id;
+import dev.morphia.annotations.Reference;
+
 
 import java.util.HashSet;
 import java.util.Set;
 
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id"
-)
 @Entity
-@Table(name="students")
 public class StudentEntityClass {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="student_id")
     private Long id;
-
-    @Column(name="student_name")
     private String name;
-    @Column(name="student_email")
     private String email;
 
-
-    //Many-To-Many relationship which depicts many students can have many subjects and vice versa is true too
-    //Just the fetch typ lazy says that when ever the set of students is loaded it will only load the students not the whole students+subjects,
-    //instead it will load the subjects when getSubjects method is called. and if a new student is added,
-    //we need to add the student and subject separately if persist is not used and if it is used we dont need to manually map the subject and students.
-    //and if we use merge then what ever changes are done in the subject for a student the changes or updates are done automatically.
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinTable(
-            name="student_subject",
-            joinColumns = @JoinColumn(name="student_id"),
-            inverseJoinColumns = @JoinColumn(name = "subject_id")
-    )
+    @Reference(lazy = true)
     private Set<SubjectEntityClass> subjects = new HashSet<>();
 
-
-    //MANY-TO-MANY mapping for Multiple Students can have Multiple Teachers and vice versa.
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinTable(
-            name="students_teachers",
-            joinColumns = @JoinColumn(name="student_id"),
-            inverseJoinColumns = @JoinColumn(name = "teacher_id")
-    )
+    @Reference(lazy = true)
+    @JsonManagedReference
     private Set<TeacherEntityClass> teachers = new HashSet<>();
 
-    public StudentEntityClass(){
+    public StudentEntityClass(){}
 
+    public void generateId(Datastore datastore){
+        this.id = CounterUtil.getNextSequence("student_id", datastore);
     }
 
     public Long getId() {

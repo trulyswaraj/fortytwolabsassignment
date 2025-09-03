@@ -1,35 +1,34 @@
 package com.fortytwolabs.School_Management_Project.Entity;
 
-import com.fasterxml.jackson.annotation.*;
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fortytwolabs.School_Management_Project.util.CounterUtil;
+import dev.morphia.Datastore;
+import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Id;
+import dev.morphia.annotations.Reference;
+
 
 import java.util.HashSet;
 import java.util.Set;
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id"
-)
 
-@Entity
-@Table(name = "subjects")
+@Entity("subjects")
 public class SubjectEntityClass {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "subject_id")
     private Long id;
-
-    @Column(name = "subject_name")
     private String name;
 
-    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "subjects")
+    @Reference
+    @JsonBackReference
     private Set<TeacherEntityClass> teachers = new HashSet<>();
 
-    @ManyToMany(mappedBy = "subjects")
+    @Reference
     private Set<StudentEntityClass> students = new HashSet<>();
 
-    public SubjectEntityClass(){
+    public SubjectEntityClass(){}
 
+    public void generateId(Datastore datastore){
+        this.id= CounterUtil.getNextSequence("subject_id", datastore);
     }
 
     public Set<TeacherEntityClass> getTeachers(){
@@ -37,6 +36,14 @@ public class SubjectEntityClass {
     }
     public void setTeachers(Set<TeacherEntityClass> teachers){
         this.teachers=teachers;
+    }
+
+    public Set<StudentEntityClass> getStudents() {
+        return students;
+    }
+
+    public void setStudents(Set<StudentEntityClass> students) {
+        this.students = students;
     }
 
     public Long getId(){

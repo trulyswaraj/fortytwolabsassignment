@@ -50,7 +50,7 @@ public class SubjectResource {
             @Override
             public void run() {
                 try{
-                    List<SubjectEntityClass> subjects = subjectService.getAllUsingCriteria();
+                    List<SubjectEntityClass> subjects = subjectService.getAllSubjects();
                     asyncResponse.resume(Response.ok(subjects).build());
                 } catch (Exception e){
                     asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -69,7 +69,7 @@ public class SubjectResource {
             @Override
             public void run() {
                 try{
-                    SubjectEntityClass subject = subjectService.getByIdUsingCriteria(id);
+                    SubjectEntityClass subject = subjectService.getSubjectById(id);
                     if(subject != null){
                         asyncResponse.resume(Response.ok(subject).build());
                     } else {
@@ -92,7 +92,7 @@ public class SubjectResource {
         CustomThreadPool.getInstance().submitTask(() -> {
             try{
 
-                subjectService.updateSubjectUsingCriteria(subjectEntityClass);
+                subjectService.updateSubject(subjectEntityClass);
                 asyncResponse.resume(
                         Response.ok("Subject With Given Id "+ id + " Updated successfully.").build()
                 );

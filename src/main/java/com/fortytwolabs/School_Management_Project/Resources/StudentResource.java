@@ -27,7 +27,7 @@ public class StudentResource {
     public Response getAllStudents(@QueryParam("page") @DefaultValue("1") int page,
                                                    @QueryParam("size") @DefaultValue("10") int size) {
 
-        List<StudentEntityClass> students = studentService.getAllStudentsUsingCriteria(page, size);
+        List<StudentEntityClass> students = studentService.getAllStudents(page, size);
         long totalItems = studentService.getTotalStudents();
         int totalPages = (int) Math.ceil((double) totalItems / size);
         Map<String, Object> response = new HashMap<>();
@@ -48,7 +48,7 @@ public class StudentResource {
 
         CustomThreadPool.getInstance().submitTask(()->{
             try{
-                StudentEntityClass studentEntityClass = studentService.getByIdUsingCriteria(id);
+                StudentEntityClass studentEntityClass = studentService.getStudentById(id);
                 asyncResponse.resume(Response.ok(studentEntityClass).build());
             } catch (Exception e) {
                 asyncResponse.resume(
@@ -94,7 +94,7 @@ public class StudentResource {
             public void run() {
                 try{
 
-                    StudentEntityClass updatedStudent = studentService.updateStudentUsingCriteria(id,studentEntityClass);
+                    StudentEntityClass updatedStudent = studentService.updateStudent(id,studentEntityClass);
                     if(updatedStudent != null){
                         asyncResponse.resume(Response.ok(updatedStudent).build());
                     } else {
@@ -119,7 +119,7 @@ public class StudentResource {
             @Override
             public void run() {
                 try {
-                    studentService.deleteStudentUsingCriteria(id);
+                    studentService.deleteStudent(id);
                     asyncResponse.resume(Response.ok("Student With id " + id + " deleted successfully!").build());
                 } catch (Exception e) {
                     asyncResponse.resume(Response.status(Response.Status.NOT_FOUND)
@@ -129,4 +129,49 @@ public class StudentResource {
             }
         });
     }
+
+    @POST
+    @Path("/{studentId}/teachers/{teacherId}")
+    public void assignTeacherToStudent(@PathParam("studentId") Long studentId,
+                                       @PathParam("teacherId") Long teacherId,
+                                       @Suspended final AsyncResponse asyncResponse) {
+        CustomThreadPool.getInstance().submitTask(() -> {
+            try {
+                StudentEntityClass updatedStudent = studentService.assignTeacherToStudent(studentId, teacherId);
+
+                if (updatedStudent != null) {
+                    asyncResponse.resume(Response.ok(updatedStudent).build());
+                } else {
+                    asyncResponse.resume(Response.status(Response.Status.NOT_FOUND)
+                            .entity("Student or Teacher not found!").build());
+                }
+            } catch (Exception e) {
+                asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity("Error assigning teacher: " + e.getMessage()).build());
+            }
+        });
+    }
+
+    @POST
+    @Path("/{studentId}/subjects/{subjectId}")
+    public void assignSubjectToStudent(@PathParam("studentId") Long studentId,
+                                       @PathParam("subjectId") Long subjectId,
+                                       @Suspended final AsyncResponse asyncResponse) {
+        CustomThreadPool.getInstance().submitTask(() -> {
+            try {
+                StudentEntityClass updatedStudent = studentService.assignSubjectToStudent(studentId, subjectId);
+                if (updatedStudent != null) {
+                    asyncResponse.resume(Response.ok(updatedStudent).build());
+                } else {
+                    asyncResponse.resume(Response.status(Response.Status.NOT_FOUND)
+                            .entity("Student or Subject not found!").build());
+                }
+            } catch (Exception e) {
+                asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity("Error assigning subject: " + e.getMessage()).build());
+            }
+        });
+    }
+
+
 }

@@ -3,351 +3,85 @@ package com.fortytwolabs.School_Management_Project.Repository;
 import com.fortytwolabs.School_Management_Project.Entity.StudentEntityClass;
 import com.fortytwolabs.School_Management_Project.Entity.SubjectEntityClass;
 import com.fortytwolabs.School_Management_Project.Entity.TeacherEntityClass;
-import com.fortytwolabs.School_Management_Project.util.HibernateUtil;
-import jakarta.persistence.criteria.*;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-
+import com.fortytwolabs.School_Management_Project.util.CounterUtil;
+import com.fortytwolabs.School_Management_Project.util.MongoDBUtil;
+import dev.morphia.Datastore;
+import dev.morphia.query.filters.Filters;
+import dev.morphia.query.updates.UpdateOperators;
 import java.util.HashSet;
 import java.util.List;
 
 public class TeacherDao {
-
-    public void save(TeacherEntityClass teacherEntityClass){
-        Transaction transaction = null;
-        try(Session session = HibernateUtil.getSessionFactory().openSession()){
-            transaction=session.beginTransaction();
-            session.persist(teacherEntityClass);
-            transaction.commit();
-        } catch (Exception e){
-            if(transaction != null) transaction.rollback();
-            e.printStackTrace();
-        }
+    private final Datastore datastore;
+    public TeacherDao(Datastore datastore){
+        this.datastore = MongoDBUtil.getDatastore();
     }
 
-//    public TeacherEntityClass getById(Long id){
-//        try(Session session = HibernateUtil.getSessionFactory().openSession()){
-//            return session.get(TeacherEntityClass.class , id);
-//        }
-//    }
-
-    public TeacherEntityClass getByIdUsingCriteria(Long id){
-        try(Session session = HibernateUtil.getSessionFactory().openSession()){
-            CriteriaBuilder cb = session.getCriteriaBuilder();
-            CriteriaQuery<TeacherEntityClass> cq = cb.createQuery(TeacherEntityClass.class);
-            Root<TeacherEntityClass> root = cq.from(TeacherEntityClass.class);
-            root.fetch("students", JoinType.LEFT);
-            root.fetch("subjects", JoinType.LEFT);
-
-            cq.select(root).where(cb.equal(root.get("id"), id));
-
-            return session.createQuery(cq).uniqueResult();
-
+   public void save(TeacherEntityClass teacherEntityClass){
+        if(teacherEntityClass.getTeacherId() == null){
+            Long nextId = CounterUtil.getNextSequence("teacherId", datastore);
+            teacherEntityClass.setTeacherId(nextId);
         }
+
+        datastore.save(teacherEntityClass);
+   }
+
+   public TeacherEntityClass getById(Long id){
+        return datastore.find(TeacherEntityClass.class)
+                .filter(Filters.eq("_id", id))
+                .first();
+   }
+
+   public List<TeacherEntityClass> getAll(){
+        return datastore.find(TeacherEntityClass.class).iterator().toList();
+   }
+
+    public void updateTeacher(TeacherEntityClass teacherEntityClass){
+        datastore.find(TeacherEntityClass.class)
+                .filter(Filters.eq("_id", teacherEntityClass.getTeacherId()))
+                .update(UpdateOperators.set("teacherName", teacherEntityClass.getTeacherName()),
+                        UpdateOperators.set("teacherEmail", teacherEntityClass.getTeacherEmail()))
+                .execute();
     }
 
-//    public List<TeacherEntityClass> getAll(){
-//        try(Session session = HibernateUtil.getSessionFactory().openSession()){
-//            return session.createQuery("from TeacherEntityClass", TeacherEntityClass.class).list();
-//        }
-//    }
-
-    public List<TeacherEntityClass> getAllUsingCriteria(){
-        try(Session session = HibernateUtil.getSessionFactory().openSession()){
-            CriteriaBuilder cb = session.getCriteriaBuilder();
-            CriteriaQuery<TeacherEntityClass> cq = cb.createQuery(TeacherEntityClass.class);
-            Root<TeacherEntityClass> root = cq.from(TeacherEntityClass.class);
-            root.fetch("students", JoinType.LEFT);
-            root.fetch("subjects", JoinType.LEFT);
-            cq.select(root).distinct(true);
-
-            List<TeacherEntityClass> teachers = session.createQuery(cq).getResultList();
-
-            return teachers;
-
-        }
-    }
-//
-//    public void updateTeacher(TeacherEntityClass teacherEntityClass){
-//        Transaction transaction = null;
-//        try(Session session = HibernateUtil.getSessionFactory().openSession()) {
-//            transaction = session.beginTransaction();
-//            session.merge(teacherEntityClass);
-//            transaction.commit();
-//        } catch (Exception e){
-//            if(transaction != null) transaction.rollback();
-//            e.printStackTrace();
-//        }
-//    }
-
-    public void updateTeacherUsingCriteria(TeacherEntityClass teacherEntityClass){
-        Transaction transaction = null;
-        try(Session session = HibernateUtil.getSessionFactory().openSession()){
-            CriteriaBuilder cb = session.getCriteriaBuilder();
-            CriteriaUpdate<TeacherEntityClass> update = cb.createCriteriaUpdate(TeacherEntityClass.class);
-            Root<TeacherEntityClass> root = update.from(TeacherEntityClass.class);
-
-            update.set("teacherName", teacherEntityClass.getTeacherName());
-            update.set("teacherEmail", teacherEntityClass.getTeacherEmail());
-
-            update.where(cb.equal(root.get("id"), teacherEntityClass.getTeacherId()));
-
-            session.createQuery(update).executeUpdate();
-            transaction.commit();
-        } catch (Exception e){
-            if(transaction != null) transaction.rollback();
-            e.printStackTrace();
-            throw new RuntimeException("Error Updating Teacher.");
-        }
+    public void deleteTeacher(Long id){
+        datastore.find(TeacherEntityClass.class)
+                .filter(Filters.eq("_id", id))
+                .delete();
     }
 
-//    public void delete(Long id){
-//        Transaction transaction = null;
-//        try(Session session = HibernateUtil.getSessionFactory().openSession()){
-//            transaction = session.beginTransaction();
-//            TeacherEntityClass teacherEntityClass = session.get(TeacherEntityClass.class, id);
-//            if(teacherEntityClass != null){
-//                session.remove(teacherEntityClass);
-//            }
-//            transaction.commit();
-//        } catch (Exception e){
-//            if(transaction != null) transaction.rollback();
-//            e.printStackTrace();
-//        }
-//    }
-
-    public void deleteUsingCriteria(Long id){
-        Transaction transaction = null;
-        try(Session session = HibernateUtil.getSessionFactory().openSession()){
-            transaction = session.beginTransaction();
-
-            CriteriaBuilder cb = session.getCriteriaBuilder();
-            CriteriaDelete<TeacherEntityClass> delete = cb.createCriteriaDelete(TeacherEntityClass.class);
-            Root<TeacherEntityClass> root = delete.from(TeacherEntityClass.class);
-
-            delete.where(cb.equal(root.get("id"), id));
-
-            session.createQuery(delete).executeUpdate();
-            transaction.commit();
-        } catch (Exception e){
-            if(transaction != null) transaction.rollback();
-            e.printStackTrace();
-            throw new RuntimeException("Error Deleting Teacher.");
-        }
-    }
-//
-//    public TeacherEntityClass assignTeacherToSubject(Long teacherId, SubjectEntityClass subjectEntityClass){
-//        Transaction transaction = null;
-//        TeacherEntityClass teacherEntityClass = null;
-//
-//        try(Session session = HibernateUtil.getSessionFactory().openSession()){
-//            transaction = session.beginTransaction();
-//
-//            teacherEntityClass = session.get(TeacherEntityClass.class, teacherId);
-//
-//            if(teacherEntityClass == null) throw new RuntimeException("Teacher Not Found!");
-//
-//            teacherEntityClass.getSubjects().add(subjectEntityClass);
-//            subjectEntityClass.getTeachers().add(teacherEntityClass);
-//
-//            session.merge(teacherEntityClass);
-//            session.merge(subjectEntityClass);
-//
-//            transaction.commit();
-//        } catch (Exception e){
-//            if(transaction != null) transaction.rollback();
-//            e.printStackTrace();
-//        }
-//        return teacherEntityClass;
-//    }
-
-    public TeacherEntityClass assignTeacherToSubjectUsingCriteria(Long teacherId, Long subjectId ){
-        Transaction transaction = null;
-        TeacherEntityClass teacherEntityClass = null;
-
-        try(Session session = HibernateUtil.getSessionFactory().openSession()){
-            transaction = session.beginTransaction();
-
-            CriteriaBuilder cb = session.getCriteriaBuilder();
-            CriteriaQuery<TeacherEntityClass> cq = cb.createQuery(TeacherEntityClass.class);
-
-            Root<TeacherEntityClass> teacherRoot = cq.from(TeacherEntityClass.class);
-            teacherRoot.fetch("subjects", JoinType.LEFT);
-            cq.select(teacherRoot).where(cb.equal(teacherRoot.get("id"), teacherId)).distinct(true);
-            teacherEntityClass = session.createQuery(cq).uniqueResult();
-
-            if(teacherEntityClass == null){
-                throw new RuntimeException("Teacher Not Found!");
-            }
-
-            SubjectEntityClass subjectEntityClass = session.get(SubjectEntityClass.class, subjectId);
-            if(subjectEntityClass == null){
-                throw new RuntimeException("Subject Not Found");
-            }
-
-            if(teacherEntityClass.getSubjects() == null) teacherEntityClass.setSubjects(new HashSet<>());
-            //if(subjectEntityClass.getTeachers() == null) subjectEntityClass.setTeachers(new HashSet<>());
-
-            teacherEntityClass.getSubjects().add(subjectEntityClass);
-            //subjectEntityClass.getTeachers().add(teacherEntityClass);
-
-           // SubjectEntityClass managedSubject = session.merge(subjectId);
-
-
-//            teacherEntityClass.getSubjects().add(subjectEntityClass);
-//            subjectEntityClass.getTeachers().add(teacherEntityClass);
-
-            session.merge(teacherEntityClass);
-           // session.merge(subjectEntityClass);
-
-            transaction.commit();
-       } catch (Exception e){
-            if(transaction != null){
-                transaction.rollback();
-                e.printStackTrace();
-            }
-        }
+    public TeacherEntityClass assignTeacherToSubject(Long teacherId, SubjectEntityClass subjectEntityClass){
+        TeacherEntityClass teacherEntityClass = getById(teacherId);
+        if(teacherEntityClass == null) throw new RuntimeException("Teacher Not Found!");
+        if(teacherEntityClass.getSubjects() == null) teacherEntityClass.setSubjects(new HashSet<>());
+        teacherEntityClass.getSubjects().add(subjectEntityClass);
+        if(subjectEntityClass.getTeachers() == null)
+            subjectEntityClass.setTeachers(new HashSet<>());
+        subjectEntityClass.getTeachers().add(teacherEntityClass);
+        datastore.save(teacherEntityClass);
+        datastore.save(subjectEntityClass);
         return teacherEntityClass;
     }
 
-//    public TeacherEntityClass updateTeachersSubjects(Long teacherId, SubjectEntityClass subjectEntityClass){
-//        Transaction transaction = null;
-//        TeacherEntityClass teacherEntityClass = null;
-//
-//        try(Session session = HibernateUtil.getSessionFactory().openSession()){
-//            transaction = session.beginTransaction();
-//            teacherEntityClass = session.get(TeacherEntityClass.class, teacherId);
-//            if(teacherEntityClass == null) throw new RuntimeException("Teacher with given id not found");
-//
-//            for(SubjectEntityClass oldSubjects : teacherEntityClass.getSubjects()){
-//                oldSubjects.getTeachers().remove(teacherEntityClass);
-//                session.merge(oldSubjects);
-//            }
-//            teacherEntityClass.getSubjects().clear();
-//
-//            teacherEntityClass.getSubjects().add(subjectEntityClass);
-//            subjectEntityClass.getTeachers().add(teacherEntityClass);
-//
-//            session.merge(teacherEntityClass);
-//            session.merge(subjectEntityClass);
-//
-//            transaction.commit();
-//        } catch (Exception e){
-//            if(transaction != null) transaction.rollback();
-//            e.printStackTrace();
-//        }
-//        return teacherEntityClass;
-//    }
-
-    public TeacherEntityClass updateTeacherSubjectsUsingCriteria(Long teacherid, SubjectEntityClass subjectEntityClass){
-        Transaction transaction = null;
-        TeacherEntityClass teacherEntityClass = null;
-
-        try(Session session = HibernateUtil.getSessionFactory().openSession()){
-            transaction = session.beginTransaction();
-
-            CriteriaBuilder cb = session.getCriteriaBuilder();
-            CriteriaQuery<TeacherEntityClass> cq = cb.createQuery(TeacherEntityClass.class);
-            Root<TeacherEntityClass> teacherRoot = cq.from(TeacherEntityClass.class);
-            teacherRoot.join("subjects", JoinType.LEFT);
-
-            cq.select(teacherRoot).where(cb.equal(teacherRoot.get("id"), teacherid )).distinct(true);
-
-            teacherEntityClass = session.createQuery(cq).uniqueResult();
-
-            if(teacherEntityClass == null){
-                throw new RuntimeException("Teacher With Given Id Not Found!");
-            }
-
-            for (SubjectEntityClass oldSubject : teacherEntityClass.getSubjects()){
-                oldSubject.getTeachers().remove(teacherEntityClass);
-                session.merge(oldSubject);
-            }
-            teacherEntityClass.getSubjects().clear();
-
-            SubjectEntityClass managedSubject = session.merge(subjectEntityClass);
-
-            teacherEntityClass.getSubjects().add(managedSubject);
-            managedSubject.getTeachers().add(teacherEntityClass);
-
-            teacherEntityClass = session.merge(teacherEntityClass);
-
-            transaction.commit();
-        } catch (Exception e){
-            if(transaction != null) transaction.rollback();
-            e.printStackTrace();
-        }
+    public TeacherEntityClass assignTeacherToStudent(Long teacherId, StudentEntityClass studentEntityClass){
+        TeacherEntityClass teacherEntityClass = getById(teacherId);
+        if(teacherEntityClass == null) throw new RuntimeException("Teacher Not Found!");
+        if(teacherEntityClass.getStudents() == null) teacherEntityClass.setStudents(new HashSet<>());
+        teacherEntityClass.getStudents().add(studentEntityClass);
+        if(studentEntityClass.getTeachers() == null)
+            studentEntityClass.setTeachers(new HashSet<>());
+        studentEntityClass.getTeachers().add(teacherEntityClass);
+        datastore.save(teacherEntityClass);
+        datastore.save(studentEntityClass);
         return teacherEntityClass;
     }
 
-
-//    public TeacherEntityClass assignTeacherToStudent(Long teacherId, StudentEntityClass studentEntityClass) {
-//        Transaction transaction = null;
-//        TeacherEntityClass teacherEntityClass = null;
-//
-//        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-//            transaction = session.beginTransaction();
-//
-//            teacherEntityClass = session.get(TeacherEntityClass.class, teacherId);
-//            if (teacherEntityClass == null) {
-//                throw new RuntimeException("Teacher with given Id not found!");
-//            }
-//
-//            // Add the student to teacher and vice versa
-//            teacherEntityClass.getStudents().add(studentEntityClass);
-//            studentEntityClass.getTeachers().add(teacherEntityClass);
-//
-//            session.merge(teacherEntityClass);
-//            session.merge(studentEntityClass);
-//
-//            transaction.commit();
-//        } catch (Exception e) {
-//            if (transaction != null) transaction.rollback();
-//            e.printStackTrace();
-//        }
-//        return teacherEntityClass;
-//    }
-
-    public TeacherEntityClass assignTeacherToStudentUsingCriteria(Long teacherId, StudentEntityClass studentEntityClass){
-        Transaction transaction = null;
-        TeacherEntityClass teacherEntityClass = null;
-
-        try(Session session = HibernateUtil.getSessionFactory().openSession()){
-            transaction=session.beginTransaction();
-
-            CriteriaBuilder cb = session.getCriteriaBuilder();
-            CriteriaQuery<TeacherEntityClass> cq = cb.createQuery(TeacherEntityClass.class);
-
-            Root<TeacherEntityClass> teacherRoot = cq.from(TeacherEntityClass.class);
-
-            teacherRoot.join("students", JoinType.LEFT);
-
-            cq.select(teacherRoot).where(cb.equal(teacherRoot.get("id"),teacherId)).distinct(true);
-
-            teacherEntityClass = session.createQuery(cq).uniqueResult();
-
-            if (teacherEntityClass == null){
-                throw  new RuntimeException("Teacher With Given Id Not Found!");
-            }
-
-            StudentEntityClass managedStudent = session.merge(studentEntityClass);
-
-            teacherEntityClass.getStudents().add(managedStudent);
-            managedStudent.getTeachers().add(teacherEntityClass);
-
-            teacherEntityClass=session.merge(teacherEntityClass);
-
-//            teacherEntityClass.getStudents().add(studentEntityClass);
-//            studentEntityClass.getTeachers().add(teacherEntityClass);
-//
-//            session.merge(teacherEntityClass);
-//            session.merge(studentEntityClass);
-
-            transaction.commit();
-        } catch (Exception e){
-            if(transaction != null) transaction.rollback();
-            e.printStackTrace();
-        }
+    public TeacherEntityClass updateTeacherSubjects(Long teacherId, SubjectEntityClass subjectEntityClass){
+        TeacherEntityClass teacherEntityClass = getById(teacherId);
+        if(teacherEntityClass == null) throw new RuntimeException("Teacher Not Found!");
+        teacherEntityClass.setSubjects(new HashSet<>());
+        teacherEntityClass.getSubjects().add(subjectEntityClass);
+        datastore.save(teacherEntityClass);
         return teacherEntityClass;
     }
 

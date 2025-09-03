@@ -27,16 +27,13 @@ public class TeacherResource {
 
     @GET
     public void getAllTeachers(@Suspended AsyncResponse asyncResponse) {
-        CustomThreadPool.getInstance().submitTask(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    List<TeacherEntityClass> teachers = teacherService.getTeacherUsingCriteria();
-                    asyncResponse.resume(Response.ok(teachers).build());
-                } catch (Exception e) {
-                    asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                            .entity("Error While Fetching All Teachers : " + e.getMessage()).build());
-                }
+        CustomThreadPool.getInstance().submitTask(() -> {
+            try {
+                List<TeacherEntityClass> teachers = teacherService.getAllTeachers();
+                asyncResponse.resume(Response.ok(teachers).build());
+            } catch (Exception e) {
+                asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity("Error While Fetching All Teachers : " + e.getMessage()).build());
             }
         });
     }
@@ -48,7 +45,7 @@ public class TeacherResource {
             @Override
             public void run() {
                 try {
-                    TeacherEntityClass teacher = teacherService.getByIdUsingCriteria(id);
+                    TeacherEntityClass teacher = teacherService.getTeacherById(id);
                     asyncResponse.resume(Response.ok(teacher).build());
                 } catch (Exception e) {
                     asyncResponse.resume(Response.status(Response.Status.NOT_FOUND)
@@ -95,7 +92,7 @@ public class TeacherResource {
                     }
                     existing.setTeacherName(teacherDetails.getTeacherName());
                     existing.setTeacherEmail(teacherDetails.getTeacherEmail());
-                    teacherService.updateTeacherUsingCriteria(existing);
+                    teacherService.updateTeacher(existing);
                     asyncResponse.resume(Response.ok(existing).build());
                 } catch (Exception e) {
                     asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -120,7 +117,7 @@ public class TeacherResource {
                                 .build());
                         return;
                     }
-                    teacherService.deleteTeacherUsingCriteria(id);
+                    teacherService.deleteTeacher(id);
                     asyncResponse.resume(Response.noContent().build());
                 } catch (Exception e) {
                     asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -187,18 +184,15 @@ public class TeacherResource {
                                       @Suspended AsyncResponse asyncResponse) {
         CustomThreadPool.getInstance().submitTask(() -> {
             try {
-                SubjectEntityClass subject = teacherService.getSubjectById(subjectId); // fetch entity
-                if (subject == null) {
-                    asyncResponse.resume(Response.status(Response.Status.NOT_FOUND)
-                            .entity("Subject not found.")
-                            .build());
-                    return;
-                }
-                TeacherEntityClass updatedTeacher = teacherService.updateTeacherSubjects(teacherId, subject);
+                TeacherEntityClass updatedTeacher = teacherService.updateTeacherSubjects(teacherId, subjectId);
                 asyncResponse.resume(Response.ok(updatedTeacher).build());
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                         .entity("Error Updating the Subjects" + e.getMessage())
+                        .build());
+            } catch (Exception e){
+                asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity("Error Updating the Subjects : "+e.getMessage())
                         .build());
             }
         });
